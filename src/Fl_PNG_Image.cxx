@@ -47,11 +47,7 @@
 extern "C"
 {
 #  include <zlib.h>
-#  ifdef HAVE_PNG_H
 #    include <png.h>
-#  else
-#    include <libpng/png.h>
-#  endif // HAVE_PNG_H
 }
 
 typedef struct  {

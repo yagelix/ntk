@@ -43,7 +43,7 @@
 #  include <cairo/cairo-quartz.h>
 # else
 // X11
-#  include <cairo/cairo-xlib.h>
+#  include <cairo-xlib.h>
 # endif
 
 FL_EXPORT extern cairo_t *fl_cairo_context;

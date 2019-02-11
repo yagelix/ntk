@@ -82,6 +82,13 @@ def configure(conf):
 #    conf.env.append_value('CXXFLAGS',['-Wall','-fno-exceptions', '-fno-rtti'])
     conf.env.append_value('CXXFLAGS', ['-Wall'])
 
+    conf.define('PKG_CONFIG_DIR', '${LIBDIR}')
+
+    conf.check_cfg(package='pkg-config', variables=['pc_path'], uselib_store='PKGCFG')
+
+    if conf.env.PKGCFG_pc_path:
+        conf.env['PKG_CONFIG_DIR'] = conf.env.PKGCFG_pc_path.split(':')[0]
+
     conf.check_cfg(package='x11', uselib_store='X11', args="--cflags --libs",
                    mandatory=True)
 
@@ -127,11 +134,15 @@ def configure(conf):
     conf.check(function_name='strtoll', header_name="stdlib.h", define_name='HAVE_STRTOLL', mandatory=False)
     conf.check(function_name='scandir', header_name="dirent.h", define_name='HAVE_SCANDIR', mandatory=False)
 
-    conf.check(lib='jpeg', uselib_store='LIBJPEG', mandatory=True )
+    #conf.check(lib='jpeg', uselib_store='LIBJPEG', mandatory=True )
+    conf.check_cfg(package='libjpeg', uselib_store='LIBJPEG', args="--cflags --libs",
+                   mandatory=True)
     conf.check_cfg(package='libpng', uselib_store='LIBPNG', args="--cflags --libs",
                           mandatory=True)
     conf.check_cfg(package='zlib', uselib_store='LIBZ', args="--cflags --libs",
                           mandatory=True)
+
+
 
     
     if Options.options.USE_GL:
@@ -432,7 +443,7 @@ src/Fl_PNG_Image.cxx
 src/Fl_PNM_Image.cxx
 ''',
                     target = 'ntk_images',
-                    uselib = [ 'LIBJPEG', 'LIBPNG', 'LIBZ', 'DL', 'M', 'PTHREAD' ] )
+                    uselib = [ 'LIBJPEG', 'LIBPNG', 'LIBZ', 'CAIRO', 'DL', 'M', 'PTHREAD' ] )
 
     if bld.env.USE_GL:
         bld.makelib( 
@@ -453,7 +464,7 @@ src/Fl_Gl_Window.cxx
          source = 'ntk.pc.in',
          target = 'ntk.pc',
          encoding = 'utf8',
-         install_path = '${LIBDIR}/pkgconfig',
+         install_path = bld.env.PKG_CONFIG_DIR,
          CFLAGS = ' '.join( CFLAGS ),
          VERSION = VERSION,
          PREFIX = bld.env.PREFIX )
@@ -462,7 +473,7 @@ src/Fl_Gl_Window.cxx
          source = 'ntk_images.pc.in',
          target = 'ntk_images.pc',
          encoding = 'utf8',
-         install_path = '${LIBDIR}/pkgconfig',
+         install_path = bld.env.PKG_CONFIG_DIR,
          CFLAGS = ' '.join( CFLAGS ),
          VERSION = VERSION,
          PREFIX = bld.env.PREFIX )
@@ -471,7 +482,7 @@ src/Fl_Gl_Window.cxx
          source = 'ntk_gl.pc.in',
          target = 'ntk_gl.pc',
          encoding = 'utf8',
-         install_path = '${LIBDIR}/pkgconfig',
+         install_path = bld.env.PKG_CONFIG_DIR,
          CFLAGS = ' '.join( CFLAGS ),
          VERSION = VERSION,
          PREFIX = bld.env.PREFIX )
@@ -505,8 +516,9 @@ src/Fl_Gl_Window.cxx
     bld.program(
 	source = 'src/ntk-chtheme.cxx',
 	target = 'ntk-chtheme',
-        includes = [ '.' ], 
-        use = ['ntk_images_shared', 'ntk_shared'],
+        includes = [ '.' ],
+        uselib = ['CAIRO'],
+        use = ['ntk_images_shared', 'ntk_shared', 'ntk_images'],
 	install_path = "${BINDIR}" )
 
     # bld( features = 'subst',
